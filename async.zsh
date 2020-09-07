@@ -563,6 +563,14 @@ async_start_worker() {
 		fi
 	fi
 
+	typeset has_noclobber=0
+
+	# Make sure we enable clobber to workaround issue where stdin is unmapped.
+	[[ -o clobber ]] || {
+		has_noclobber=1
+		setopt clobber
+	}
+
 	# Workaround for stderr in the main shell sometimes (incorrectly) being
 	# reassigned to /dev/null by the reassignment done inside the async
 	# worker.
@@ -575,6 +583,9 @@ async_start_worker() {
 		return 1
 	}
 	exec {errfd}>& -
+
+	# Re-enable noclobber if it was enabled.
+	(( has_no_clobber )) && setopt noclobber
 
 	# Re-enable it if it was enabled, for debugging.
 	(( has_xtrace )) && setopt xtrace
